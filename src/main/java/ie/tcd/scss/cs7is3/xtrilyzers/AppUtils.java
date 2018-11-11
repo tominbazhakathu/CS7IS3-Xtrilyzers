@@ -8,20 +8,14 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.text.DateFormat.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-
-import ie.tcd.scss.cs7is3.xtrilyzers.ParseDoc.DocField;
 
 class ParseDoc {
   public static final int ID_MARK_OFFSET = 3;
@@ -50,27 +44,6 @@ class ParseDoc {
     private DocField(String attribute, String label) {
       this.attribute = attribute;
       this.label = label;
-    }
-    
-    public static DocField getDocField(String strField) {
-      DocField docField;
-      return null;
-//      if (strField.equals(DocField.TITLE.getMark())) {
-//        docField = DocField.TITLE;
-//      }
-//      else if (strField.equals(DocField.AUTHOR.getMark())){
-//        docField = DocField.AUTHOR;
-//      }
-//      else if (strField.equals(DocField.BIBLIO.getMark())){
-//        docField = DocField.BIBLIO;
-//      }
-//      else if (strField.equals(DocField.WORDS.getMark())){
-//        docField = DocField.WORDS;
-//      }
-//      else {
-//        throw new RuntimeException();
-//      }
-//      return docField;
     }
   }
 
@@ -138,6 +111,10 @@ class ParseQuery {
     this.queryId = queryId;
     this.words = new StringBuilder();
   }
+  
+  public ParseQuery(String queryId, StringBuilder words) {
+    this.words = words;
+  }
 
   public String getQueryId() {
     return queryId;
@@ -170,50 +147,66 @@ class ParseQuery {
 class ParseTopic {
   public static final int ID_MARK_OFFSET = 3;
   public static final int FIELD_MARK_LENGTH = 2;
+  public static final String TOPIC_START_TAG = "<top>";
+  public static final String TOPIC_END_TAG = "</top>";
 
-  private int querySeq;
-  private String queryId;
-  private StringBuilder words;
+  private int seq;
+  private String num;
+  private String title;
+  private String description;
+  private String narrative;
+  
   private List<QueryResult> results;
 
-  public enum QueryField {
-    ID(".I"), WORDS(".W");
+  public enum TopicField {
+    NUM("<num>", "</num>"), TITLE("<title>", "</title>"), DESCRIPTION("<desc>", "</desc>"), NARRATIVE("<narr>", "</narr>");
 
-    private String mark = "";
-
-    public String getMark() {
-      return this.mark;
+    private String startTag = "";
+    private String endTag = "";
+    
+    public String getStartTag() {
+      return startTag;
     }
 
-    private QueryField(String mark) {
-      this.mark = mark;
+    public String getEndTag() {
+      return endTag;
     }
+
+    private TopicField(String startTag, String endTag) {
+      this.startTag = startTag;
+      this.endTag = endTag;
+    }
+  }
+
+  public ParseTopic(String num, String title, String description, String narrative) {
+    this.num = num;
+    this.title = title;
+    this.description = description;
+    this.narrative = narrative;
   }
   
-  public void setQuerySeq(int querySeq) {
-    this.querySeq = querySeq;
+  public void setSeq(int seq) {
+    this.seq = seq;
+  }
+  
+  public int getSeq() {
+    return seq;
   }
 
-  public int getQuerySeq() {
-    return querySeq;
+  public String getNum() {
+    return num;
   }
 
-  public ParseTopic(String queryId) {
-    this.queryId = queryId;
-    this.words = new StringBuilder();
+  public String getTitle() {
+    return title;
   }
 
-  public String getQueryId() {
-    return queryId;
+  public String getDescription() {
+    return description;
   }
 
-  public void addWords(StringBuilder words) {
-    this.words.append(" ");
-    this.words.append(words);
-  }
-
-  public String getWords() {
-    return this.words.toString();
+  public String getNarrative() {
+    return narrative;
   }
 
   public void setResults(List<QueryResult> results) {
@@ -230,7 +223,6 @@ class ParseTopic {
     return validField;
   }
 }
-
 
 class QueryResult {
   private String docId;
@@ -258,11 +250,11 @@ class AppUtils {
     try {
       JsonArray jsonObjects = (JsonArray) new JsonParser().parse(new FileReader(path));
        for (int i = 0; i < jsonObjects.size(); i++) {
-         String id = ((JsonObject)jsonObjects.get(i)).get(DocField.ID.getAttribute()).getAsString();
-         String paperName = ((JsonObject)jsonObjects.get(i)).get(DocField.NAME.getAttribute()).getAsString();
-         String title = ((JsonObject)jsonObjects.get(i)).get(DocField.TITLE.getAttribute()).getAsString();
-         String date = ((JsonObject)jsonObjects.get(i)).get(DocField.DATE.getAttribute()).getAsString();
-         String content = ((JsonObject)jsonObjects.get(i)).get(DocField.CONTENT.getAttribute()).getAsString();
+         String id = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.ID.getAttribute()).getAsString();
+         String paperName = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.NAME.getAttribute()).getAsString();
+         String title = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.TITLE.getAttribute()).getAsString();
+         String date = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.DATE.getAttribute()).getAsString();
+         String content = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.CONTENT.getAttribute()).getAsString();
          ParseDoc doc = new ParseDoc(id, paperName, title, date, content);
          docs.add(doc);
        }     
@@ -277,6 +269,7 @@ class AppUtils {
     return docs;
   }
 
+  /*
   public static List<ParseQuery> parseQueries(String path) throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(path));
     String lastLineRead;
@@ -356,34 +349,58 @@ class AppUtils {
     parseQuery.addWords(sb);
     return currentLine;
   }
-
-  public static List<ParseQuery> parseTopics(String path) throws IOException {
+  */
+  
+  public static List<ParseTopic> parseTopics(String path) throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(path));
-    String lastLineRead;
-    
-    lastLineRead = reader.readLine();
-    List<ParseQuery> topics = new ArrayList<ParseQuery>();
-    while (true) {
-      lastLineRead = parseQuery(lastLineRead, reader, topics);
-      if (lastLineRead == null) {
-        break;
-      }
+    String line;
+    StringBuffer sbTopicsLines = new StringBuffer();
+    while ((line = reader.readLine()) != null) {
+      sbTopicsLines.append(line);
     }
     // Close file
     reader.close();
+    
+    List<ParseTopic> topics = new ArrayList<ParseTopic>();
+    do {
+      int start = sbTopicsLines.indexOf(ParseTopic.TOPIC_START_TAG);
+      int end = sbTopicsLines.indexOf(ParseTopic.TOPIC_END_TAG);
+      if (start == -1 || end == -1) {
+        break;
+      }
+      StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
+      topics.add(parseTopic(topicText));
+      
+    } while (true);
     return topics;
   }
   
-  public static void writeResults(String path, List<ParseQuery> queries) throws IOException {
+  public static ParseTopic parseTopic(StringBuffer sb) {
+    int startNum, startTitle, startDescription, startNarrative;
+    
+    startNum = sb.indexOf(ParseTopic.TopicField.NUM.getStartTag());
+    startTitle = sb.indexOf(ParseTopic.TopicField.TITLE.getStartTag());
+    startDescription = sb.indexOf(ParseTopic.TopicField.DESCRIPTION.getStartTag());
+    startNarrative = sb.indexOf(ParseTopic.TopicField.NARRATIVE.getStartTag());
+
+    return new ParseTopic(
+      sb.substring(startNum, startTitle),
+      sb.substring(startTitle, startNarrative),
+      sb.substring(startDescription, startNarrative),
+      sb.substring(startNarrative)
+    );
+  }
+  
+  public static void writeResults(String path, List<ParseTopic> topics) throws IOException {
     File file = new File(path);
     FileOutputStream fos = new FileOutputStream(file);
     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
-    for (ParseQuery qry : queries) {
-      List<QueryResult> results = qry.getResults();
+    for (ParseTopic topic : topics) {
+      List<QueryResult> results = topic.getResults();
       for (QueryResult result : results) {
         StringBuilder sb = new StringBuilder();
-        sb.append(qry.getQuerySeq());
+        sb.append(topic.getSeq());
         sb.append(" ");
         sb.append("0");
         sb.append(" ");

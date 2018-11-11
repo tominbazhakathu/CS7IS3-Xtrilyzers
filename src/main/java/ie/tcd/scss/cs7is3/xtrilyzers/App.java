@@ -140,7 +140,77 @@ public class App {
     }
   }
 
-  // Pending question: can you split the search vs title and content, and combine them in some way?
+  //Pending question: can you split the search vs title and content, and combine them in some way?
+  public static void evaluateTopics() {
+    try {
+      List<ParseTopic> topics = AppUtils.parseTopics(TOPICS_PATH);
+      //System.out.println("Number topics: " + parseTopics.size());
+      //Open the folder that contains our search index
+      //Directory directory = FSDirectory.open(Paths.get(INDEX_DIRECTORY));
+      
+      // create objects to read and search across the index
+      DirectoryReader ireader = DirectoryReader.open(directory);
+      IndexSearcher isearcher = new IndexSearcher(ireader);
+      if (similarity != null) {
+        isearcher.setSimilarity(similarity);
+        //isearcher.setSimilarity(new ClassicSimilarity());
+        //isearcher.setSimilarity(new BM25Similarity());
+        //isearcher.setSimilarity(new MultiSimilarity(new Similarity[] {new ClassicSimilarity(), new BM25Similarity()}));
+      }
+      
+      for (ParseTopic topic : topics) {
+        //generate queries
+        List<ParseQuery> queries = generateQueries(topic);
+      
+        QueryParser parser = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
+        
+        int seq = 1;
+        topic.setSeq(seq);
+        for (ParseQuery qry : queries) {
+          // parse the query with the parser
+          //System.out.println("Query Id: " + qry.getQueryId());
+          //System.out.println("Query Id: " + qry.getWords());
+          Query query = parser.parse(qry.getWords().trim().replace("?","\\?"));
+  
+          // Get the set of results
+          ScoreDoc[] hits = isearcher.search(query, MAX_RESULTS).scoreDocs;
+  
+          List<QueryResult> results = new ArrayList<QueryResult>();
+  
+          //System.out.println("Documents: " + hits.length);
+          for (int i = 0; i < hits.length; i++) {
+            Document hitDoc = isearcher.doc(hits[i].doc);
+            String docId = hitDoc.get(ParseDoc.DocField.ID.getLabel());
+            String score = Float.toString(hits[i].score);
+            QueryResult result = new QueryResult(docId, score);
+            //System.out.println(i + ") " + hitDoc.get(ParseDoc.DocField.ID.getLabel()) + " " + hits[i].score);
+            results.add(result);
+          }
+          qry.setResults(results);
+          seq++;
+        }
+        //TODO: Need additional code to merge queries and results
+        topic.setResults(queries.get(0).getResults());
+      }
+      AppUtils.writeResults(RESULTS_PATH, topics);
+      //AppUtils.writeResults(RESULTS_PATH + "_f" + indexFieldCombination + "a"+ indexAnalyzer + "s" + indexSimilarity, topics);
+      
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ParseException pe) {
+      pe.printStackTrace();
+    }
+  }
+  
+  public static List<ParseQuery> generateQueries(ParseTopic parseTopic) {
+    //add code to generate more elaborate queries
+    List<ParseQuery> queries = new ArrayList<ParseQuery>();
+    queries.add(new ParseQuery("1", new StringBuilder(parseTopic.getDescription())));
+    return queries;
+  }
+  
+/*
+  //Pending question: can you split the search vs title and content, and combine them in some way?
   public static void evaluateQueries() {
     try {
       List<ParseQuery> queries = AppUtils.parseQueries(QUERIES_PATH);
@@ -194,6 +264,7 @@ public class App {
       pe.printStackTrace();
     }
   }
+  */
 
   public static void shutdown() throws IOException {
     directory.close();
