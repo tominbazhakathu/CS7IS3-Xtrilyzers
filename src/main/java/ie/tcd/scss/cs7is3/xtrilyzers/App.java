@@ -34,7 +34,7 @@ public class App {
   // Directory where the search index will be saved
   private final static String INDEX_DIRECTORY = "index";
   private final static String CORPUS_PATH = "corpus/sample.json";
-  private final static String QUERIES_PATH = "queries/queries.qry";
+  //private final static String QUERIES_PATH = "queries/queries.qry";
   private final static String TOPICS_PATH = "topics/CS7IS3-Assignment2-Topics";
   private final static String RESULTS_PATH = "results/results.txt";
 
@@ -189,7 +189,7 @@ public class App {
           qry.setResults(results);
           seq++;
         }
-        //TODO: Need additional code to merge queries and results
+        //TODO: Need additional code to merge queries and results in case a topic generates multiple queries
         topic.setResults(queries.get(0).getResults());
       }
       AppUtils.writeResults(RESULTS_PATH, topics);
@@ -202,8 +202,8 @@ public class App {
     }
   }
   
+  //TODO: Need a way to generate more elaborated queries
   public static List<ParseQuery> generateQueries(ParseTopic parseTopic) {
-    //add code to generate more elaborate queries
     List<ParseQuery> queries = new ArrayList<ParseQuery>();
     queries.add(new ParseQuery("1", new StringBuilder(parseTopic.getDescription())));
     return queries;
@@ -271,8 +271,6 @@ public class App {
   }
 
   public static void main(String[] args) throws IOException {
-    
-    
 //    
 //    int indexFieldCombination = -1; 
     int indexAnalyzer = -1;
@@ -321,8 +319,8 @@ public class App {
 //    
 //    
     buildIndex(FIELD_COMBINATION.values()[0]);
-//    evaluateQueries();
-//    shutdown();
+    evaluateTopics();
+    shutdown();
     System.out.println("Processing done");
   }
 }

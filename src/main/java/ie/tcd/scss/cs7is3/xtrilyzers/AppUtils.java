@@ -370,6 +370,7 @@ class AppUtils {
       }
       StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
       topics.add(parseTopic(topicText));
+      sbTopicsLines = new StringBuffer(sbTopicsLines.substring(end + ParseTopic.TOPIC_END_TAG.length()));
       
     } while (true);
     return topics;
@@ -383,12 +384,24 @@ class AppUtils {
     startDescription = sb.indexOf(ParseTopic.TopicField.DESCRIPTION.getStartTag());
     startNarrative = sb.indexOf(ParseTopic.TopicField.NARRATIVE.getStartTag());
 
-    return new ParseTopic(
+    if (startNum == -1 || startTitle == -1 || startDescription == -1 || startNarrative == -1 ) {
+      //throw new RuntimeException();
+    }
+    
+    /*return new ParseTopic(
       sb.substring(startNum, startTitle),
       sb.substring(startTitle, startNarrative),
       sb.substring(startDescription, startNarrative),
       sb.substring(startNarrative)
-    );
+    );*/
+    
+    ParseTopic pt = new ParseTopic(
+        sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle),
+        sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription),
+        sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative),
+        sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length())
+      );
+    return pt;
   }
   
   public static void writeResults(String path, List<ParseTopic> topics) throws IOException {
