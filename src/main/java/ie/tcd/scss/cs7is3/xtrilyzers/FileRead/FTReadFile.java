@@ -5,12 +5,15 @@ import com.google.gson.GsonBuilder;
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 
 public class FTReadFile {
 
 
-    private  ArrayList<ContentBean> fullContent = new ArrayList<>();
+    private ArrayList<ContentBean> fullContent = new ArrayList<>();
 
 
     public void iterateFiles() {
@@ -26,7 +29,7 @@ public class FTReadFile {
                     File[] files = subDocs[i].listFiles();
                     for (int j = 0; j < files.length; j++) {
 
-                        System.out.println("Reading File " + j + " in ft folder "+ i);
+                        System.out.println("Reading File " + files[j].getName() + " in ft folder " + i);
                         if (files[j].isFile() && !files[j].getName().startsWith("read")) {
                             BasicReadClass read = new BasicReadClass();
                             String content = read.readFileContent(files[j]);
@@ -59,19 +62,43 @@ public class FTReadFile {
 
         for (int i = 0; i < docs.length; i++) {
 
-            String doc = docs[i];
+            try {
 
-            String newsPaper = "The Financial Times - FT";
+                String doc = docs[i];
 
-            String docNumber = doc.substring(doc.indexOf("<DOCNO>"), doc.indexOf("</DOCNO>")).replace("<DOCNO>", "").trim();
-            String date = doc.substring(doc.indexOf("<DATE>"), doc.indexOf("</DATE>")).replace("<DATE>", "").trim();
-            String title = doc.substring(doc.indexOf("<HEADLINE>"), doc.indexOf("</HEADLINE>")).replace("<HEADLINE>", "").trim();
-            title = title.substring(title.indexOf("/")+1).trim();
-            String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
+                String newsPaper = "The Financial Times - FT";
+
+                if (!doc.contains("<DOCNO>")) {
+                    continue;
+                }
+
+                String docNumber = doc.substring(doc.indexOf("<DOCNO>"), doc.indexOf("</DOCNO>")).replace("<DOCNO>", "").trim();
+                String date = doc.substring(doc.indexOf("<DATE>"), doc.indexOf("</DATE>")).replace("<DATE>", "").trim();
+                String title = "";
+                if (doc.contains("<HEADLINE>")) {
+                    title = doc.substring(doc.indexOf("<HEADLINE>"), doc.indexOf("</HEADLINE>")).replace("<HEADLINE>", "").trim();
+                    title = title.substring(title.indexOf("/") + 1).trim();
+                } else {
+                    title = "The Financial Times - " + date;
+                }
+
+                String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
 //            System.out.println(title);
 
-            ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
-            arrayList.add(contentBean);
+                DateFormat df = new SimpleDateFormat("yyMMdd");
+                DateFormat sdf = new SimpleDateFormat("MMMM dd, yyyy");
+
+                try {
+                    date = sdf.format(df.parse(date));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
+                arrayList.add(contentBean);
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
+            }
 
         }
         return arrayList;
@@ -90,5 +117,9 @@ public class FTReadFile {
         FTReadFile ftReadFile = new FTReadFile();
         ftReadFile.iterateFiles();
 
+    }
+
+    public void setArrayDefault() {
+        fullContent = new ArrayList<>();
     }
 }

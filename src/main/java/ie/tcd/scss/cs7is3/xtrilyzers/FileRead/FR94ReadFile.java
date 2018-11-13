@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 public class FR94ReadFile {
 
 
-    private  ArrayList<ContentBean> fullContent = new ArrayList<>();
+    private ArrayList<ContentBean> fullContent = new ArrayList<>();
 
     public void iterateFiles() {
 
@@ -36,7 +36,7 @@ public class FR94ReadFile {
                     File[] files = subDocs[i].listFiles();
                     for (int j = 0; j < files.length; j++) {
 
-                        System.out.println("Reading File " + j + " in FR94 folder " + i);
+                        System.out.println("Reading File " + files[j].getName() + " in FR94 folder " + i);
                         if (files[j].isFile() && !files[j].getName().startsWith("read")) {
                             BasicReadClass read = new BasicReadClass();
                             String content = read.readFileContentFR(files[j]);
@@ -77,52 +77,54 @@ public class FR94ReadFile {
 
 //        System.out.println(content);
 
-        content.replace("."," .");
+        content.replace(".", " .");
 
         String[] docs = content.split("</DOC>");
         ArrayList<ContentBean> arrayList = new ArrayList<>();
 
         for (int i = 0; i < docs.length; i++) {
 
-            String doc = docs[i];
+            try {
 
-            String date = "";
+                String doc = docs[i];
+
+                String date = "";
 //            System.out.println(doc);
 
-            String regex = "(\\s+\\w+\\s+\\d+\\,\\s+\\d+\\s)";
-            Matcher matcher = Pattern.compile(regex).matcher(doc);
-            if (matcher.find()) {
-                date = matcher.group(1);
-                date = date.trim();
-                DateFormat df = new SimpleDateFormat("MMMM dd, yyyy");
-                try {
+                String regex = "(\\s+\\w+\\s+\\d+\\,\\s+\\d+\\s)";
+                Matcher matcher = Pattern.compile(regex).matcher(doc);
+                if (matcher.find()) {
+                    date = matcher.group(1);
+                    date = date.trim();
+                    DateFormat df = new SimpleDateFormat("MMMM dd, yyyy");
+                    try {
 
 //                    System.out.println(date);
-                    df.parse(date);
-                } catch (ParseException e) {
+                        df.parse(date);
+                    } catch (ParseException e) {
 
 
 //                    System.out.println("Error : " + date);
+                    }
                 }
-            }
 
-            String regex1 = "(\\s+\\w+\\s+\\d+\\,\\s+\\d+\\s.)";
-            Matcher matcher1 = Pattern.compile(regex1).matcher(doc);
-            if (matcher1.find()) {
-                date = matcher1.group(1);
-                date = date.trim();
-                date.replace(".","").trim();
-                DateFormat df = new SimpleDateFormat("MMMM dd, yyyy");
-                try {
+                String regex1 = "(\\s+\\w+\\s+\\d+\\,\\s+\\d+\\s.)";
+                Matcher matcher1 = Pattern.compile(regex1).matcher(doc);
+                if (matcher1.find()) {
+                    date = matcher1.group(1);
+                    date = date.trim();
+                    date.replace(".", "").trim();
+                    DateFormat df = new SimpleDateFormat("MMMM dd, yyyy");
+                    try {
 
 //                    System.out.println(date);
-                    df.parse(date);
-                } catch (ParseException e) {
+                        df.parse(date);
+                    } catch (ParseException e) {
 
 
 //                    System.out.println("Error : " + date);
+                    }
                 }
-            }
 
 //            System.out.println(date);
 
@@ -130,32 +132,40 @@ public class FR94ReadFile {
 //                System.out.println(doc);
 //                System.exit(0);
 //            }
-            String newsPaper = "Federal Register - FR";
+                String newsPaper = "Federal Register - FR";
 
-            String docNumber = doc.substring(doc.indexOf("<DOCNO>"), doc.indexOf("</DOCNO>")).replace("<DOCNO>", "").trim();
-//            String date = doc.substring(doc.indexOf("<DATE1>"), doc.indexOf("</DATE1>")).replace("<DATE1>", "").trim();
-            String title = "";
-            if (doc.contains("<DOCTITLE>")) {
-                title = doc.substring(doc.indexOf("<DOCTITLE>"), doc.indexOf("</DOCTITLE>")).replace("<DOCTITLE>", "").trim();
-                if (title.contains("<DATE1>")) {
-                    title = title.replace("</DATE1>", " ");
-                    title = title.replace("<DATE1>", " ");
+                if (!doc.contains("<DOCNO>")) {
+                    continue;
                 }
-            } else {
-                title = "Federal Register : " + date;
-            }
-            String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
+                String docNumber = doc.substring(doc.indexOf("<DOCNO>"), doc.indexOf("</DOCNO>")).replace("<DOCNO>", "").trim();
+//            String date = doc.substring(doc.indexOf("<DATE1>"), doc.indexOf("</DATE1>")).replace("<DATE1>", "").trim();
+                String title = "";
+                if (doc.contains("<DOCTITLE>")) {
+                    title = doc.substring(doc.indexOf("<DOCTITLE>"), doc.indexOf("</DOCTITLE>")).replace("<DOCTITLE>", "").trim();
+                    if (title.contains("<DATE1>")) {
+                        title = title.replace("</DATE1>", " ");
+                        title = title.replace("<DATE1>", " ");
+                    }
+                } else {
+                    title = "Federal Register : " + date;
+                }
+                String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
 //            System.out.println(title);
 
 //            ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
 //            arrayList.add(contentBean);
-            for (int j = 0; j < replace.length; j++) {
-                if (textContent.contains(replace[j])) {
-                    textContent = textContent.replace(replace[j], " ");
+                for (int j = 0; j < replace.length; j++) {
+                    if (textContent.contains(replace[j])) {
+                        textContent = textContent.replace(replace[j], " ");
+                    }
                 }
+                ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
+                arrayList.add(contentBean);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                continue;
             }
-            ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
-            arrayList.add(contentBean);
 
 
 //            break;
@@ -172,5 +182,9 @@ public class FR94ReadFile {
         FR94ReadFile fr94ReadFile = new FR94ReadFile();
         fr94ReadFile.iterateFiles();
 
+    }
+
+    public void setArrayDefault() {
+        fullContent = new ArrayList<>();
     }
 }
