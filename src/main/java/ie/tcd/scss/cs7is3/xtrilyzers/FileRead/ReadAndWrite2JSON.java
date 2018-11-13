@@ -75,7 +75,7 @@ public class ReadAndWrite2JSON {
         try (FileWriter file = new FileWriter("corpus/corpus.json")) {
             file.write(gson.toJson(beans));
             System.out.println("Successfully Copied JSON Object to File...");
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
