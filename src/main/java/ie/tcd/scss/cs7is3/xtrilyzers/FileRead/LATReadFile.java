@@ -1,7 +1,5 @@
 package ie.tcd.scss.cs7is3.xtrilyzers.FileRead;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
 
 import java.io.File;
@@ -19,13 +17,14 @@ public class LATReadFile {
     public void iterateFiles() {
 
 
-        String docPath = "data/files/latimes";
+        String docPath = "corpus/latimes";
         File doc = new File(docPath);
+        System.out.println("Reading Los Angeles Times...");
         if (doc.exists() && doc.isDirectory()) {
             File[] files = doc.listFiles();
             for (int i = 0; i < files.length; i++) {
-                if (files[i].isFile() && !files[i].getName().startsWith("read")) {
-                    System.out.println("Reading File " + files[i].getName() + " in LATimes...");
+                if (files[i].isFile() && !files[i].getName().contains("read")) {
+//                    System.out.println("Reading File " + files[i].getName() + " in LATimes...");
                     BasicReadClass read = new BasicReadClass();
                     String content = read.readFileContent(files[i]);
 //                    System.out.println(content);
@@ -42,6 +41,8 @@ public class LATReadFile {
             }
         }
 
+
+        System.out.println("Total Number of Documents "+fullContent.size());
 
     }
 
@@ -112,14 +113,6 @@ public class LATReadFile {
     public ArrayList<ContentBean> getResult() {
         iterateFiles();
         return fullContent;
-    }
-
-
-    public static void main(String[] args) {
-
-        LATReadFile latReadFile = new LATReadFile();
-        latReadFile.iterateFiles();
-
     }
 
     public void setArrayDefault() {

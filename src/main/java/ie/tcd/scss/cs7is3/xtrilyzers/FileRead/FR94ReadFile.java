@@ -1,15 +1,7 @@
 package ie.tcd.scss.cs7is3.xtrilyzers.FileRead;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import gate.sgml.Sgml2Xml;
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
-import jdk.internal.org.xml.sax.InputSource;
 
-
-import javax.swing.text.Document;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -26,17 +18,18 @@ public class FR94ReadFile {
     public void iterateFiles() {
 
 
-        String docPath = "data/files/fr94";
+        String docPath = "corpus/fr94";
         File doc = new File(docPath);
+        System.out.println("Reading Federal Register...");
         if (doc.exists() && doc.isDirectory()) {
             File[] subDocs = doc.listFiles();
             for (int i = 0; i < subDocs.length; i++) {
                 if (subDocs[i].isDirectory() && !subDocs[i].getName().startsWith("read")) {
-                    System.out.println("Reading Folder " + i + " in FR94...");
+//                    System.out.println("Reading Folder " + i + " in FR94...");
                     File[] files = subDocs[i].listFiles();
                     for (int j = 0; j < files.length; j++) {
 
-                        System.out.println("Reading File " + files[j].getName() + " in FR94 folder " + i);
+//                        System.out.println("Reading File " + files[j].getName() + " in FR94 folder " + i);
                         if (files[j].isFile() && !files[j].getName().startsWith("read")) {
                             BasicReadClass read = new BasicReadClass();
                             String content = read.readFileContentFR(files[j]);
@@ -58,6 +51,8 @@ public class FR94ReadFile {
 
             }
         }
+
+        System.out.println("Total Number of Documents "+fullContent.size());
 
     }
 
@@ -150,10 +145,7 @@ public class FR94ReadFile {
                     title = "Federal Register : " + date;
                 }
                 String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
-//            System.out.println(title);
 
-//            ContentBean contentBean = new ContentBean(newsPaper, title, textContent, date, docNumber);
-//            arrayList.add(contentBean);
                 for (int j = 0; j < replace.length; j++) {
                     if (textContent.contains(replace[j])) {
                         textContent = textContent.replace(replace[j], " ");
@@ -176,13 +168,6 @@ public class FR94ReadFile {
 
     }
 
-
-    public static void main(String[] args) {
-
-        FR94ReadFile fr94ReadFile = new FR94ReadFile();
-        fr94ReadFile.iterateFiles();
-
-    }
 
     public void setArrayDefault() {
         fullContent = new ArrayList<>();

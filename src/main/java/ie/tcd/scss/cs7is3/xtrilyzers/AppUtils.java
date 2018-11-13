@@ -16,258 +16,260 @@ import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
+import ie.tcd.scss.cs7is3.xtrilyzers.FileRead.ReadAndWrite2JSON;
 
 class ParseDoc {
-  public static final int ID_MARK_OFFSET = 3;
-  public static final int FIELD_MARK_LENGTH = 2;
-  private String id;
-  private String paperName;
-  private String title;
-  private String date;
-  private String content;
-  
-  public enum DocField {
-    //ID(".I", "Id"), TITLE(".T", "Title"), AUTHOR(".A", "Author"), BIBLIO(".B", "Bibliography"), WORDS(".W", "Words");
-    ID("documentID", "Id"), NAME("newsPaperName", "paperName"), TITLE("documentTitle", "Title"), DATE("documentDate", "Date"), CONTENT("aticleContent", "Content"); 
+    public static final int ID_MARK_OFFSET = 3;
+    public static final int FIELD_MARK_LENGTH = 2;
+    private String id;
+    private String paperName;
+    private String title;
+    private String date;
+    private String content;
 
-    private String attribute = "";
-    private String label = "";
+    public enum DocField {
+        //ID(".I", "Id"), TITLE(".T", "Title"), AUTHOR(".A", "Author"), BIBLIO(".B", "Bibliography"), WORDS(".W", "Words");
+        ID("documentID", "Id"), NAME("newsPaperName", "paperName"), TITLE("documentTitle", "Title"), DATE("documentDate", "Date"), CONTENT("aticleContent", "Content");
 
-    public String getAttribute() {
-      return this.attribute;
+        private String attribute = "";
+        private String label = "";
+
+        public String getAttribute() {
+            return this.attribute;
+        }
+
+        public String getLabel() {
+            return this.label;
+        }
+
+        private DocField(String attribute, String label) {
+            this.attribute = attribute;
+            this.label = label;
+        }
     }
-    
-    public String getLabel() {
-      return this.label;
+
+    public ParseDoc(String id, String paperName, String title, String date, String content) {
+        this.id = id;
+        this.paperName = paperName;
+        this.title = title;
+        this.date = date;
+        this.content = content;
     }
 
-    private DocField(String attribute, String label) {
-      this.attribute = attribute;
-      this.label = label;
+    public String getId() {
+        return id;
     }
-  }
 
-  public ParseDoc(String id, String paperName, String title, String date, String content) {
-    this.id = id;
-    this.paperName = paperName;
-    this.title = title;
-    this.date = date;
-    this.content = content;
-  }
-  
-  public String getId() {
-    return id;
-  }
+    public String getPaperName() {
+        return paperName;
+    }
 
-  public String getPaperName() {
-    return paperName;
-  }
-  
-  public String getTitle() {
-    return title;
-  }
+    public String getTitle() {
+        return title;
+    }
 
-  public String getDate() {
-    return date;
-  }
+    public String getDate() {
+        return date;
+    }
 
-  public String getContent() {
-    return content;
-  }
+    public String getContent() {
+        return content;
+    }
 }
 
 class ParseQuery {
-  public static final int ID_MARK_OFFSET = 3;
-  public static final int FIELD_MARK_LENGTH = 2;
+    public static final int ID_MARK_OFFSET = 3;
+    public static final int FIELD_MARK_LENGTH = 2;
 
-  private int querySeq;
-  private String queryId;
-  private StringBuilder words;
-  private List<QueryResult> results;
+    private int querySeq;
+    private String queryId;
+    private StringBuilder words;
+    private List<QueryResult> results;
 
-  public enum QueryField {
-    ID(".I"), WORDS(".W");
+    public enum QueryField {
+        ID(".I"), WORDS(".W");
 
-    private String mark = "";
+        private String mark = "";
 
-    public String getMark() {
-      return this.mark;
+        public String getMark() {
+            return this.mark;
+        }
+
+        private QueryField(String mark) {
+            this.mark = mark;
+        }
     }
 
-    private QueryField(String mark) {
-      this.mark = mark;
+    public void setQuerySeq(int querySeq) {
+        this.querySeq = querySeq;
     }
-  }
-  
-  public void setQuerySeq(int querySeq) {
-    this.querySeq = querySeq;
-  }
 
-  public int getQuerySeq() {
-    return querySeq;
-  }
+    public int getQuerySeq() {
+        return querySeq;
+    }
 
-  public ParseQuery(String queryId) {
-    this.queryId = queryId;
-    this.words = new StringBuilder();
-  }
-  
-  public ParseQuery(String queryId, StringBuilder words) {
-    this.words = words;
-  }
+    public ParseQuery(String queryId) {
+        this.queryId = queryId;
+        this.words = new StringBuilder();
+    }
 
-  public String getQueryId() {
-    return queryId;
-  }
+    public ParseQuery(String queryId, StringBuilder words) {
+        this.words = words;
+    }
 
-  public void addWords(StringBuilder words) {
-    this.words.append(" ");
-    this.words.append(words);
-  }
+    public String getQueryId() {
+        return queryId;
+    }
 
-  public String getWords() {
-    return this.words.toString();
-  }
+    public void addWords(StringBuilder words) {
+        this.words.append(" ");
+        this.words.append(words);
+    }
 
-  public void setResults(List<QueryResult> results) {
-    this.results = results;
-  }
+    public String getWords() {
+        return this.words.toString();
+    }
 
-  public List<QueryResult> getResults() {
-    return results;
-  }
+    public void setResults(List<QueryResult> results) {
+        this.results = results;
+    }
 
-  public static boolean isValidField(String fieldMark) {
-    boolean validField = fieldMark.equals(ParseQuery.QueryField.ID.getMark()) ||
-                         fieldMark.equals(ParseQuery.QueryField.WORDS.getMark());
-    return validField;
-  }
+    public List<QueryResult> getResults() {
+        return results;
+    }
+
+    public static boolean isValidField(String fieldMark) {
+        boolean validField = fieldMark.equals(ParseQuery.QueryField.ID.getMark()) ||
+                fieldMark.equals(ParseQuery.QueryField.WORDS.getMark());
+        return validField;
+    }
 }
 
 class ParseTopic {
-  public static final int ID_MARK_OFFSET = 3;
-  public static final int FIELD_MARK_LENGTH = 2;
-  public static final String TOPIC_START_TAG = "<top>";
-  public static final String TOPIC_END_TAG = "</top>";
+    public static final int ID_MARK_OFFSET = 3;
+    public static final int FIELD_MARK_LENGTH = 2;
+    public static final String TOPIC_START_TAG = "<top>";
+    public static final String TOPIC_END_TAG = "</top>";
 
-  private int seq;
-  private String num;
-  private String title;
-  private String description;
-  private String narrative;
-  
-  private List<QueryResult> results;
+    private int seq;
+    private String num;
+    private String title;
+    private String description;
+    private String narrative;
 
-  public enum TopicField {
-    NUM("<num>", "</num>"), TITLE("<title>", "</title>"), DESCRIPTION("<desc>", "</desc>"), NARRATIVE("<narr>", "</narr>");
+    private List<QueryResult> results;
 
-    private String startTag = "";
-    private String endTag = "";
-    
-    public String getStartTag() {
-      return startTag;
+    public enum TopicField {
+        NUM("<num>", "</num>"), TITLE("<title>", "</title>"), DESCRIPTION("<desc>", "</desc>"), NARRATIVE("<narr>", "</narr>");
+
+        private String startTag = "";
+        private String endTag = "";
+
+        public String getStartTag() {
+            return startTag;
+        }
+
+        public String getEndTag() {
+            return endTag;
+        }
+
+        private TopicField(String startTag, String endTag) {
+            this.startTag = startTag;
+            this.endTag = endTag;
+        }
     }
 
-    public String getEndTag() {
-      return endTag;
+    public ParseTopic(String num, String title, String description, String narrative) {
+        this.num = num;
+        this.title = title;
+        this.description = description;
+        this.narrative = narrative;
     }
 
-    private TopicField(String startTag, String endTag) {
-      this.startTag = startTag;
-      this.endTag = endTag;
+    public void setSeq(int seq) {
+        this.seq = seq;
     }
-  }
 
-  public ParseTopic(String num, String title, String description, String narrative) {
-    this.num = num;
-    this.title = title;
-    this.description = description;
-    this.narrative = narrative;
-  }
-  
-  public void setSeq(int seq) {
-    this.seq = seq;
-  }
-  
-  public int getSeq() {
-    return seq;
-  }
+    public int getSeq() {
+        return seq;
+    }
 
-  public String getNum() {
-    return num;
-  }
+    public String getNum() {
+        return num;
+    }
 
-  public String getTitle() {
-    return title;
-  }
+    public String getTitle() {
+        return title;
+    }
 
-  public String getDescription() {
-    return description;
-  }
+    public String getDescription() {
+        return description;
+    }
 
-  public String getNarrative() {
-    return narrative;
-  }
+    public String getNarrative() {
+        return narrative;
+    }
 
-  public void setResults(List<QueryResult> results) {
-    this.results = results;
-  }
+    public void setResults(List<QueryResult> results) {
+        this.results = results;
+    }
 
-  public List<QueryResult> getResults() {
-    return results;
-  }
+    public List<QueryResult> getResults() {
+        return results;
+    }
 
-  public static boolean isValidField(String fieldMark) {
-    boolean validField = fieldMark.equals(ParseQuery.QueryField.ID.getMark()) ||
-                         fieldMark.equals(ParseQuery.QueryField.WORDS.getMark());
-    return validField;
-  }
+    public static boolean isValidField(String fieldMark) {
+        boolean validField = fieldMark.equals(ParseQuery.QueryField.ID.getMark()) ||
+                fieldMark.equals(ParseQuery.QueryField.WORDS.getMark());
+        return validField;
+    }
 }
 
 class QueryResult {
-  private String docId;
-  private String score;
+    private String docId;
+    private String score;
 
-  public QueryResult(String docId, String score) {
-    this.docId = docId;
-    this.score = score;
-  }
+    public QueryResult(String docId, String score) {
+        this.docId = docId;
+        this.score = score;
+    }
 
-  public String getDocId() {
-    return docId;
-  }
+    public String getDocId() {
+        return docId;
+    }
 
-  public String getScore() {
-    return score;
-  }
+    public String getScore() {
+        return score;
+    }
 }
 
 class AppUtils {
-  
-  public static List<ParseDoc> parseCorpus(String path) throws IOException {
-    List<ParseDoc> docs = new ArrayList<ParseDoc>();
-    
-    try {
-      JsonArray jsonObjects = (JsonArray) new JsonParser().parse(new FileReader(path));
-       for (int i = 0; i < jsonObjects.size(); i++) {
-         String id = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.ID.getAttribute()).getAsString();
-         String paperName = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.NAME.getAttribute()).getAsString();
-         String title = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.TITLE.getAttribute()).getAsString();
-         String date = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.DATE.getAttribute()).getAsString();
-         String content = ((JsonObject)jsonObjects.get(i)).get(ParseDoc.DocField.CONTENT.getAttribute()).getAsString();
-         ParseDoc doc = new ParseDoc(id, paperName, title, date, content);
-         docs.add(doc);
-       }     
-    }  
-    catch (JsonIOException e) {
-       e.printStackTrace();
-   } catch (JsonSyntaxException e) {
-       e.printStackTrace();
-   } catch (FileNotFoundException e) {
-       e.printStackTrace();
-   }
-    return docs;
-  }
+
+    public static List<ParseDoc> parseCorpus() throws IOException {
+        List<ParseDoc> docs = new ArrayList<ParseDoc>();
+
+        ArrayList<ContentBean> docBeans;
+        ReadAndWrite2JSON readAndWrite2JSON = new ReadAndWrite2JSON();
+        docBeans = readAndWrite2JSON.returnCorpus();
+        System.out.println(docBeans.size());
+//        readAndWrite2JSON.garbageCollection();
+
+        for (int i = 0; i < docBeans.size(); i++) {
+
+            String id = docBeans.get(i).getDocumentID();
+            String title = docBeans.get(i).getDocumentTitle();
+            String newspaper = docBeans.get(i).getNewsPaperName();
+            String date = docBeans.get(i).getDocumentDate();
+            String content = docBeans.get(i).getAticleContent();
+            ParseDoc doc = new ParseDoc(id, newspaper, title, date, content);
+
+            docs.add(doc);
+
+        }
+
+        return docs;
+    }
 
   /*
   public static List<ParseQuery> parseQueries(String path) throws IOException {
@@ -350,43 +352,43 @@ class AppUtils {
     return currentLine;
   }
   */
-  
-  public static List<ParseTopic> parseTopics(String path) throws IOException {
-    BufferedReader reader = new BufferedReader(new FileReader(path));
-    String line;
-    StringBuffer sbTopicsLines = new StringBuffer();
-    while ((line = reader.readLine()) != null) {
-      sbTopicsLines.append(line);
-    }
-    // Close file
-    reader.close();
-    
-    List<ParseTopic> topics = new ArrayList<ParseTopic>();
-    do {
-      int start = sbTopicsLines.indexOf(ParseTopic.TOPIC_START_TAG);
-      int end = sbTopicsLines.indexOf(ParseTopic.TOPIC_END_TAG);
-      if (start == -1 || end == -1) {
-        break;
-      }
-      StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
-      topics.add(parseTopic(topicText));
-      sbTopicsLines = new StringBuffer(sbTopicsLines.substring(end + ParseTopic.TOPIC_END_TAG.length()));
-      
-    } while (true);
-    return topics;
-  }
-  
-  public static ParseTopic parseTopic(StringBuffer sb) {
-    int startNum, startTitle, startDescription, startNarrative;
-    
-    startNum = sb.indexOf(ParseTopic.TopicField.NUM.getStartTag());
-    startTitle = sb.indexOf(ParseTopic.TopicField.TITLE.getStartTag());
-    startDescription = sb.indexOf(ParseTopic.TopicField.DESCRIPTION.getStartTag());
-    startNarrative = sb.indexOf(ParseTopic.TopicField.NARRATIVE.getStartTag());
 
-    if (startNum == -1 || startTitle == -1 || startDescription == -1 || startNarrative == -1 ) {
-      //throw new RuntimeException();
+    public static List<ParseTopic> parseTopics(String path) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(path));
+        String line;
+        StringBuffer sbTopicsLines = new StringBuffer();
+        while ((line = reader.readLine()) != null) {
+            sbTopicsLines.append(line);
+        }
+        // Close file
+        reader.close();
+
+        List<ParseTopic> topics = new ArrayList<ParseTopic>();
+        do {
+            int start = sbTopicsLines.indexOf(ParseTopic.TOPIC_START_TAG);
+            int end = sbTopicsLines.indexOf(ParseTopic.TOPIC_END_TAG);
+            if (start == -1 || end == -1) {
+                break;
+            }
+            StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
+            topics.add(parseTopic(topicText));
+            sbTopicsLines = new StringBuffer(sbTopicsLines.substring(end + ParseTopic.TOPIC_END_TAG.length()));
+
+        } while (true);
+        return topics;
     }
+
+    public static ParseTopic parseTopic(StringBuffer sb) {
+        int startNum, startTitle, startDescription, startNarrative;
+
+        startNum = sb.indexOf(ParseTopic.TopicField.NUM.getStartTag());
+        startTitle = sb.indexOf(ParseTopic.TopicField.TITLE.getStartTag());
+        startDescription = sb.indexOf(ParseTopic.TopicField.DESCRIPTION.getStartTag());
+        startNarrative = sb.indexOf(ParseTopic.TopicField.NARRATIVE.getStartTag());
+
+        if (startNum == -1 || startTitle == -1 || startDescription == -1 || startNarrative == -1) {
+            //throw new RuntimeException();
+        }
     
     /*return new ParseTopic(
       sb.substring(startNum, startTitle),
@@ -394,40 +396,40 @@ class AppUtils {
       sb.substring(startDescription, startNarrative),
       sb.substring(startNarrative)
     );*/
-    
-    ParseTopic pt = new ParseTopic(
-        sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle),
-        sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription),
-        sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative),
-        sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length())
-      );
-    return pt;
-  }
-  
-  public static void writeResults(String path, List<ParseTopic> topics) throws IOException {
-    File file = new File(path);
-    FileOutputStream fos = new FileOutputStream(file);
-    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
-    for (ParseTopic topic : topics) {
-      List<QueryResult> results = topic.getResults();
-      for (QueryResult result : results) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(topic.getSeq());
-        sb.append(" ");
-        sb.append("0");
-        sb.append(" ");
-        sb.append(result.getDocId());
-        sb.append(" ");
-        sb.append("1");
-        sb.append(" ");
-        sb.append(result.getScore());
-        sb.append(" ");
-        sb.append("STANDARD");
-        bw.write(sb.toString());
-        bw.newLine();
-      }
+        ParseTopic pt = new ParseTopic(
+                sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle),
+                sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription),
+                sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative),
+                sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length())
+        );
+        return pt;
     }
-    bw.close();
-  }
+
+    public static void writeResults(String path, List<ParseTopic> topics) throws IOException {
+        File file = new File(path);
+        FileOutputStream fos = new FileOutputStream(file);
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+
+        for (ParseTopic topic : topics) {
+            List<QueryResult> results = topic.getResults();
+            for (QueryResult result : results) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(topic.getSeq());
+                sb.append(" ");
+                sb.append("0");
+                sb.append(" ");
+                sb.append(result.getDocId());
+                sb.append(" ");
+                sb.append("1");
+                sb.append(" ");
+                sb.append(result.getScore());
+                sb.append(" ");
+                sb.append("STANDARD");
+                bw.write(sb.toString());
+                bw.newLine();
+            }
+        }
+        bw.close();
+    }
 }

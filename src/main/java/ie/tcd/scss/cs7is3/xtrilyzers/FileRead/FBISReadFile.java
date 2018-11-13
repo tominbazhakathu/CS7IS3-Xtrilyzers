@@ -1,10 +1,6 @@
 package ie.tcd.scss.cs7is3.xtrilyzers.FileRead;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -21,13 +17,14 @@ public class FBISReadFile {
     public void iterateFiles() {
 
 
-        String docPath = "data/files/fbis";
+        String docPath = "corpus/fbis";
         File doc = new File(docPath);
+        System.out.println("Reading Foreign Broadcast Information Service...");
         if (doc.exists() && doc.isDirectory()) {
             File[] files = doc.listFiles();
             for (int i = 0; i < files.length; i++) {
                 if (files[i].isFile() && !files[i].getName().startsWith("read")) {
-                    System.out.println("Reading File " + files[i].getName() + " in FBIS...");
+//                    System.out.println("Reading File " + files[i].getName() + " in FBIS...");
                     BasicReadClass read = new BasicReadClass();
                     String content = read.readFileContent(files[i]);
 //                    System.out.println(content);
@@ -44,6 +41,9 @@ public class FBISReadFile {
             }
         }
 
+
+
+        System.out.println("Total Number of Documents "+fullContent.size());
 
     }
 
@@ -87,7 +87,7 @@ public class FBISReadFile {
                             cal.set(Calendar.YEAR, 1994);
                             date = sdf.format(cal.getTime());
                         } catch (ParseException e2) {
-                            e2.printStackTrace();
+//                            e2.printStackTrace();
                         }
                     }
 //                e.printStackTrace();
@@ -123,14 +123,6 @@ public class FBISReadFile {
     public ArrayList<ContentBean> getResult() {
         iterateFiles();
         return fullContent;
-    }
-
-
-    public static void main(String[] args) {
-
-        FBISReadFile fbisReadFile = new FBISReadFile();
-        fbisReadFile.iterateFiles();
-
     }
 
     public void setArrayDefault() {

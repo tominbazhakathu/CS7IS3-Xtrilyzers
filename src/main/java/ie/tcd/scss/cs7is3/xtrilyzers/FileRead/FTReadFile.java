@@ -1,7 +1,5 @@
 package ie.tcd.scss.cs7is3.xtrilyzers.FileRead;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
 
 import java.io.File;
@@ -19,17 +17,18 @@ public class FTReadFile {
     public void iterateFiles() {
 
 
-        String docPath = "data/files/ft";
+        String docPath = "corpus/ft";
         File doc = new File(docPath);
+        System.out.println("Reading Financial Times...");
         if (doc.exists() && doc.isDirectory()) {
             File[] subDocs = doc.listFiles();
             for (int i = 0; i < subDocs.length; i++) {
                 if (subDocs[i].isDirectory() && !subDocs[i].getName().startsWith("read")) {
-                    System.out.println("Reading Folder " + i + " in ft...");
+//                    System.out.println("Reading Folder " + i + " in ft...");
                     File[] files = subDocs[i].listFiles();
                     for (int j = 0; j < files.length; j++) {
 
-                        System.out.println("Reading File " + files[j].getName() + " in ft folder " + i);
+//                        System.out.println("Reading File " + files[j].getName() + " in ft folder " + i);
                         if (files[j].isFile() && !files[j].getName().startsWith("read")) {
                             BasicReadClass read = new BasicReadClass();
                             String content = read.readFileContent(files[j]);
@@ -51,6 +50,9 @@ public class FTReadFile {
 
             }
         }
+
+
+        System.out.println("Total Number of Documents "+fullContent.size());
 
 
     }
@@ -82,7 +84,13 @@ public class FTReadFile {
                     title = "The Financial Times - " + date;
                 }
 
-                String textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
+                String textContent = "";
+
+                if(!doc.contains("<TEXT>")){
+                    continue;
+                }
+
+                textContent = doc.substring(doc.indexOf("<TEXT>"), doc.indexOf("</TEXT>")).replace("<TEXT>", "").trim();
 //            System.out.println(title);
 
                 DateFormat df = new SimpleDateFormat("yyMMdd");
@@ -109,14 +117,6 @@ public class FTReadFile {
     public ArrayList<ContentBean> getResult() {
         iterateFiles();
         return fullContent;
-    }
-
-
-    public static void main(String[] args) {
-
-        FTReadFile ftReadFile = new FTReadFile();
-        ftReadFile.iterateFiles();
-
     }
 
     public void setArrayDefault() {
