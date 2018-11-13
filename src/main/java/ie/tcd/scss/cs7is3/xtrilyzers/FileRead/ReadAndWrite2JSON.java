@@ -79,17 +79,21 @@ public class ReadAndWrite2JSON {
             e.printStackTrace();
         }
 
+        System.out.println("Completed parsing................");
+
 
     }
 
     public ArrayList<ContentBean> returnCorpus(){
+        readFiles();
         return beans;
     }
 
 
     public static void main(String[] args) {
         ReadAndWrite2JSON readAndWrite2JSON = new ReadAndWrite2JSON();
-        readAndWrite2JSON.readFiles();
+        ArrayList<ContentBean> corpus = readAndWrite2JSON.returnCorpus();
+
 
     }
 }
