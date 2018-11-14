@@ -17,10 +17,8 @@
                     <source>8</source>
                     <target>8</target>
                     <compilerArgs>
-                        <jvmArgs>
-                            <jvmArg>-Xmx5g</jvmArg>
-                            <jvmArg>-Xms1024m</jvmArg>
-                        </jvmArgs>
+                        <jvmArgs>-Xmx5g</jvmArgs>
+                        <jvmArgs>-Xms1024m</jvmArgs>
                     </compilerArgs>
                 </configuration>
 
