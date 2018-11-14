@@ -16,7 +16,15 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                    <compilerArgs>
+                        <jvmArgs>
+                            <jvmArg>-Xmx5g</jvmArg>
+                            <jvmArg>-Xms1024m</jvmArg>
+                        </jvmArgs>
+                    </compilerArgs>
                 </configuration>
+
+
             </plugin>
         </plugins>
     </build>
