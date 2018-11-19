@@ -46,7 +46,7 @@ public class App {
     private static Directory directory;
 
     public static enum FIELD_COMBINATION {
-        JUST_CONTENT, ALL_FIELDS, TITLE_AND_WORDS
+        JUST_CONTENT, ALL_FIELDS, TITLE_AND_CONTENT
     }
 
     public static void init(int indexAnalyzer, int indexSimilarity) throws IOException {
@@ -111,7 +111,6 @@ public class App {
                 switch (fc) {
                     case JUST_CONTENT:
                         sb.append(parseDoc.getContent());
-
                         break;
                     case ALL_FIELDS:
                         sb.append(parseDoc.getTitle());
@@ -122,7 +121,7 @@ public class App {
                         sb.append(" ");
                         sb.append(parseDoc.getContent());
                         break;
-                    case TITLE_AND_WORDS:
+                    case TITLE_AND_CONTENT:
                         sb.append(parseDoc.getTitle());
                         sb.append(" ");
                         sb.append(parseDoc.getContent());
@@ -160,15 +159,13 @@ public class App {
                 //isearcher.setSimilarity(new BM25Similarity());
                 //isearcher.setSimilarity(new MultiSimilarity(new Similarity[] {new ClassicSimilarity(), new BM25Similarity()}));
             }
-
+            
             for (ParseTopic topic : topics) {
                 //generate queries
                 List<ParseQuery> queries = generateQueries(topic);
 
                 QueryParser parser = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
 
-                int seq = 1;
-                topic.setSeq(seq);
                 for (ParseQuery qry : queries) {
                     // parse the query with the parser
                     //System.out.println("Query Id: " + qry.getQueryId());
@@ -190,7 +187,6 @@ public class App {
                         results.add(result);
                     }
                     qry.setResults(results);
-                    seq++;
                 }
                 //TODO: Need additional code to merge queries and results in case a topic generates multiple queries
                 topic.setResults(queries.get(0).getResults());

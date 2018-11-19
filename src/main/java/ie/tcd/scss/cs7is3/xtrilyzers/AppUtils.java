@@ -364,6 +364,7 @@ class AppUtils {
         reader.close();
 
         List<ParseTopic> topics = new ArrayList<ParseTopic>();
+        int seq = 1;
         do {
             int start = sbTopicsLines.indexOf(ParseTopic.TOPIC_START_TAG);
             int end = sbTopicsLines.indexOf(ParseTopic.TOPIC_END_TAG);
@@ -371,7 +372,9 @@ class AppUtils {
                 break;
             }
             StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
-            topics.add(parseTopic(topicText));
+            ParseTopic topic = parseTopic(topicText);
+            topic.setSeq(seq++);
+            topics.add(topic);
             sbTopicsLines = new StringBuffer(sbTopicsLines.substring(end + ParseTopic.TOPIC_END_TAG.length()));
 
         } while (true);
