@@ -270,56 +270,49 @@ public class App {
     }
 
     public static void main(String[] args) throws IOException {
-//    
-//    int indexFieldCombination = -1; 
-        int indexAnalyzer = -1;
-        int indexSimilarity = -1;
+      int indexFieldCombination = -1; 
+      int indexAnalyzer = -1;
+      int indexSimilarity = -1;
 
-        indexAnalyzer = 0;
-        indexSimilarity = 0;
-
-//    
-//    for (int i = 0; i < args.length; i++) {
-//      switch (args[i].charAt(0)) {
-//        case '-':
-//          if (args[i].length() < 2) {
-//            System.out.println("here1");
-//            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-//          }
-//          if (args[i].charAt(1) != 'f' && args[i].charAt(1) != 'a' && args[i].charAt(1) != 's') {
-//            System.out.println("here2");
-//            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-//          }
-//          if (args[i + 1].length() != 1) {
-//            System.out.println("::" + args[i + 1] + "::");
-//            System.out.println("here3");
-//            throw new IllegalArgumentException("Not a valid argument: " + args[i + 1]);
-//          }
-//          if (args[i].charAt(1) == 'f') {
-//            indexFieldCombination = Integer.parseInt(args[i + 1]);
-//          }
-//          if (args[i].charAt(1) == 'a') {
-//            indexAnalyzer = Integer.parseInt(args[i + 1]);
-//          }
-//          if (args[i].charAt(1) == 's') {
-//            indexSimilarity = Integer.parseInt(args[i + 1]);
-//          }
-//          i++;
-//          break;
-//        default:
-//          System.out.println("here4");
-//          throw new IllegalArgumentException("Not a valid argument: " + args[i]);
-//      }
-//    }
-//    if (indexFieldCombination == -1 || indexAnalyzer == -1 || indexSimilarity == -1 ) {
-//      throw new IllegalArgumentException("Not enough arguments");
-//    }
-        init(indexAnalyzer, indexSimilarity);
-//    
-//    
-        buildIndex(FIELD_COMBINATION.values()[1]);
-        evaluateTopics();
-        shutdown();
-        System.out.println("Processing done");
+      for (int i = 0; i < args.length; i++) {
+        switch (args[i].charAt(0)) {
+          case '-':
+            if (args[i].length() < 2) {
+              System.out.println("here1");
+              throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+            }
+            if (args[i].charAt(1) != 'f' && args[i].charAt(1) != 'a' && args[i].charAt(1) != 's') {
+              System.out.println("here2");
+              throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+            }
+            if (args[i + 1].length() != 1) {
+              System.out.println("::" + args[i + 1] + "::");
+              System.out.println("here3");
+              throw new IllegalArgumentException("Not a valid argument: " + args[i + 1]);
+            }
+            if (args[i].charAt(1) == 'f') {
+              indexFieldCombination = Integer.parseInt(args[i + 1]);
+            }
+            if (args[i].charAt(1) == 'a') {
+              indexAnalyzer = Integer.parseInt(args[i + 1]);
+            }
+            if (args[i].charAt(1) == 's') {
+              indexSimilarity = Integer.parseInt(args[i + 1]);
+            }
+            i++;
+            break;
+          default:
+            System.out.println("here4");
+            throw new IllegalArgumentException("Not a valid argument: " + args[i]);
+        }
+      }
+      if (indexFieldCombination == -1 || indexAnalyzer == -1 || indexSimilarity == -1 ) {
+        throw new IllegalArgumentException("Not enough arguments");
+      }
+      init(indexAnalyzer, indexSimilarity);
+      buildIndex(FIELD_COMBINATION.values()[1]);
+      evaluateTopics();
+      shutdown();
+      System.out.println("Processing done");
     }
 }
