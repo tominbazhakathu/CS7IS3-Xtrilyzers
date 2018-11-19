@@ -11,7 +11,7 @@ do
       echo mvn exec:java -Dexec.mainClass="ie.tcd.scss.cs7is3.xtrilyzers.App" -Dexec.args="-f $f -a $a -s $s"
       mvn exec:java -Dexec.mainClass="ie.tcd.scss.cs7is3.xtrilyzers.App" -Dexec.args="-f $f -a $a -s $s"
       
-      trec_eval.8.1/trec_eval -l3 qrels/QRelsCorrectedforTRECeval results/results.txt > "results/trec_eval_f"$f"a"$a"s"$s""
+      trec_eval.9.0/trec_eval -l3 qrels/QRelsCorrectedforTRECeval results/results.txt > "results/trec_eval_f"$f"a"$a"s"$s""
     done
   done
 done

@@ -181,6 +181,9 @@ class ParseTopic {
     }
 
     public ParseTopic(String num, String title, String description, String narrative) {
+        if(num.contains("Number:")){
+            num = num.substring(num.indexOf(":")+1).trim();
+        }
         this.num = num;
         this.title = title;
         this.description = description;
@@ -196,6 +199,9 @@ class ParseTopic {
     }
 
     public String getNum() {
+        if(num.contains("Number:")){
+            num = num.substring(num.indexOf(":")+1).trim();
+        }
         return num;
     }
 
@@ -418,7 +424,7 @@ class AppUtils {
             List<QueryResult> results = topic.getResults();
             for (QueryResult result : results) {
                 StringBuilder sb = new StringBuilder();
-                sb.append(topic.getSeq());
+                sb.append(topic.getNum());
                 sb.append(" ");
                 sb.append("0");
                 sb.append(" ");
