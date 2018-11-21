@@ -97,7 +97,6 @@ public class App {
       config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
 
       IndexWriter iwriter = new IndexWriter(directory, config);
-
       List<ParseDoc> parseDocs = AppUtils.parseCorpus();
 
       System.out.println(parseDocs.size() + " Parsed Document");
@@ -175,7 +174,7 @@ public class App {
           // parse the query with the parser
           // System.out.println("Query Id: " + qry.getQueryId());
           // System.out.println("Query Id: " + qry.getWords());
-          Query query = parser.parse(qry.getWords().trim().replace("?", "\\?"));
+          Query query = parser.parse(QueryParser.escape(qry.getWords().trim().replace("?", "\\?")));
 
           // Get the set of results
           ScoreDoc[] hits = isearcher.search(query, MAX_RESULTS).scoreDocs;
@@ -212,7 +211,13 @@ public class App {
   // TODO: Need a way to generate more elaborated queries
   public static List<ParseQuery> generateQueries(ParseTopic parseTopic) {
     List<ParseQuery> queries = new ArrayList<ParseQuery>();
-    queries.add(new ParseQuery("1", new StringBuilder(parseTopic.getDescription())));
+    StringBuilder sb = new StringBuilder(parseTopic.getTitle().replace("\"", ""));
+    sb.append(" ");
+    sb.append(parseTopic.getDescription().replace("\"", ""));
+    sb.append(" ");
+    sb.append(parseTopic.getNarrative().replace("\"", ""));
+    queries.add(new ParseQuery("1", sb));
+    //Many ways of generating the query like taking only the description, description and title, description and narrative, understanding narrative, etc.
     return queries;
   }
 

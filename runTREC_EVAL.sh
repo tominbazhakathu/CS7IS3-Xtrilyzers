@@ -2,7 +2,7 @@
 for f in 0
 do
   #for a in 0 1 2 3 4
-  for a in 0
+  for a in 3
   do
     #for s in 0 1 2
     for s in 0
