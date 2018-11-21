@@ -215,8 +215,8 @@ public class App {
     StringBuilder sb = new StringBuilder(parseTopic.getTitle().replace("\"", ""));
     sb.append(" ");
     sb.append(parseTopic.getDescription().replace("\"", ""));
-    //sb.append(" ");
-    //sb.append(parseTopic.getNarrative().replace("\"", ""));
+    sb.append(" ");
+    sb.append(parseTopic.getNarrative().replace("\"", ""));
     queries.add(new ParseQuery("1", sb));
     //Many ways of generating the query like taking only the description, description and title, description and narrative, understanding narrative, etc.
     return queries;

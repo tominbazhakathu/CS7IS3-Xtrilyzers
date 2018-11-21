@@ -29,6 +29,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.Analyzer.TokenStreamComponents;
 import org.apache.lucene.analysis.en.EnglishPossessiveFilter;
+import org.apache.lucene.analysis.en.KStemFilter;
 import org.apache.lucene.analysis.en.PorterStemFilter;
 import org.apache.lucene.analysis.miscellaneous.LengthFilter;
 import org.apache.lucene.analysis.miscellaneous.SetKeywordMarkerFilter;
@@ -159,6 +160,7 @@ public final class CustomAnalyzer extends StopwordAnalyzerBase {
     result = new LengthFilter(result, minTokenLength, maxTokenLength);
     if(!stemExclusionSet.isEmpty())
       result = new SetKeywordMarkerFilter(result, stemExclusionSet);
+    //result = new KStemFilter(result);
     result = new PorterStemFilter(result);
     return new TokenStreamComponents(source, result);
   }

@@ -1,5 +1,5 @@
 #for f in 0 1 2
-for f in 0
+for f in 2
 do
   #for a in 0 1 2 3 4
   for a in 3

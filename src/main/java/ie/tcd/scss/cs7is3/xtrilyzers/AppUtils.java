@@ -8,7 +8,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import ie.tcd.scss.cs7is3.xtrilyzers.BeanClass.ContentBean;
 import ie.tcd.scss.cs7is3.xtrilyzers.FileRead.ReadAndWrite2JSON;
@@ -318,9 +321,10 @@ class AppUtils {
   public static List<ParseTopic> parseTopics(String path) throws IOException {
     BufferedReader reader = new BufferedReader(new FileReader(path));
     String line;
-    StringBuffer sbTopicsLines = new StringBuffer();
+    StringBuffer sbTopicsLines = new StringBuffer(); 
     while ((line = reader.readLine()) != null) {
-      sbTopicsLines.append(line);
+      // NOTE: adding a " " character to account for words that were only separated by EOLs, which get consumed by readLine() 
+      sbTopicsLines.append(line + " ");
     }
     // Close file
     reader.close();
@@ -333,7 +337,7 @@ class AppUtils {
       if (start == -1 || end == -1) {
         break;
       }
-      StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start, end));
+      StringBuffer topicText = new StringBuffer(sbTopicsLines.substring(start + ParseTopic.TOPIC_START_TAG.length(), end));
       ParseTopic topic = parseTopic(topicText);
       topic.setSeq(seq++);
       topics.add(topic);
@@ -361,12 +365,34 @@ class AppUtils {
      * startNarrative), sb.substring(startNarrative) );
      */
 
+    String narrative = sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length());
+    narrative = extractNarrative(narrative);
+    
     ParseTopic pt = new ParseTopic(
         sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle),
         sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription),
         sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative),
-        sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length()));
+        narrative);
     return pt;
+  }
+  
+  public static String extractNarrative(String narrative) {
+    // Replacing the slash character by a space. Slash appears to divide certain words 
+    // Sentences, and pieces of sentences on the topic narrative seems to be separated by either comma, semicolon, and dot
+    //System.out.println("narrative before-> " + narrative);
+    String[] sentences = narrative.replace("/", " ").split("[\\.|,|;]");
+    Pattern p = Pattern.compile(".*not relevant.*");
+    List<String> filteredSentences =
+      Arrays.stream(sentences).filter((String sentence) -> !p.matcher(sentence).matches()).collect(Collectors.toList());
+    
+    StringBuilder sb = new StringBuilder();
+    for(String sentence : filteredSentences) {
+        sb.append(sentence);
+    }
+    
+    //System.out.println("narrative after-> " + sb.toString());
+    //Much more logic could be used to "interpret" the narrative
+    return sb.toString();
   }
 
   public static void writeResults(String path, List<ParseTopic> topics) throws IOException {
