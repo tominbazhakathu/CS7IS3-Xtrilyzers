@@ -1,8 +1,9 @@
-#for f in 0 1 2
-for f in 2
+#for f in 0 1 2 3
+#3 is MULTI_FIELD
+for f in 3
 do
   #for a in 0 1 2 3 4
-  for a in 3
+  for a in 1
   do
     #for s in 0 1 2
     for s in 0

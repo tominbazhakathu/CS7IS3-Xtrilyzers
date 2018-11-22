@@ -208,7 +208,7 @@ class ParseTopic {
   public String getNarrative() {
     return narrative;
   }
-
+  
   public void setResults(List<QueryResult> results) {
     this.results = results;
   }
@@ -354,7 +354,7 @@ class AppUtils {
     startTitle = sb.indexOf(ParseTopic.TopicField.TITLE.getStartTag());
     startDescription = sb.indexOf(ParseTopic.TopicField.DESCRIPTION.getStartTag());
     startNarrative = sb.indexOf(ParseTopic.TopicField.NARRATIVE.getStartTag());
-
+    
     if (startNum == -1 || startTitle == -1 || startDescription == -1 || startNarrative == -1) {
       // throw new RuntimeException();
     }
@@ -365,34 +365,48 @@ class AppUtils {
      * startNarrative), sb.substring(startNarrative) );
      */
 
+    String num = sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle);
+    num = num.replace("Number:", " ");
+    String title = sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription);
+    String description = sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative);
+    description = description.replace("Description:", " ");
     String narrative = sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length());
-    narrative = extractNarrative(narrative);
+    narrative = narrative.replace("Narrative:", " ");
     
     ParseTopic pt = new ParseTopic(
-        sb.substring(startNum + ParseTopic.TopicField.NUM.getStartTag().length(), startTitle),
-        sb.substring(startTitle + ParseTopic.TopicField.TITLE.getStartTag().length(), startDescription),
-        sb.substring(startDescription + ParseTopic.TopicField.DESCRIPTION.getStartTag().length(), startNarrative),
+        num,
+        title,
+        description,
         narrative);
     return pt;
   }
   
-  public static String extractNarrative(String narrative) {
+  public static String[] splitNarrative(String narrative) {
     // Replacing the slash character by a space. Slash appears to divide certain words 
     // Sentences, and pieces of sentences on the topic narrative seems to be separated by either comma, semicolon, and dot
     //System.out.println("narrative before-> " + narrative);
     String[] sentences = narrative.replace("/", " ").split("[\\.|,|;]");
     Pattern p = Pattern.compile(".*not relevant.*");
-    List<String> filteredSentences =
+    
+    List<String> sentencesToInclude =
       Arrays.stream(sentences).filter((String sentence) -> !p.matcher(sentence).matches()).collect(Collectors.toList());
     
-    StringBuilder sb = new StringBuilder();
-    for(String sentence : filteredSentences) {
-        sb.append(sentence);
+    List<String> sentencesToNOTInclude =
+        Arrays.stream(sentences).filter((String sentence) -> p.matcher(sentence).matches()).collect(Collectors.toList());
+    
+    StringBuilder sb1 = new StringBuilder();
+    for(String sentence : sentencesToInclude) {
+        sb1.append(sentence);
+    }
+    
+    StringBuilder sb2 = new StringBuilder();
+    for(String sentence : sentencesToNOTInclude) {
+        sb2.append(sentence);
     }
     
     //System.out.println("narrative after-> " + sb.toString());
     //Much more logic could be used to "interpret" the narrative
-    return sb.toString();
+    return new String[] { sb1.toString(), sb2.toString() };
   }
 
   public static void writeResults(String path, List<ParseTopic> topics) throws IOException {

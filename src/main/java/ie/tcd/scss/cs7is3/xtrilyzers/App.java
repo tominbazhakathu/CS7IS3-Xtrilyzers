@@ -20,6 +20,9 @@ import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
+import org.apache.lucene.search.BooleanClause.Occur;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -45,7 +48,7 @@ public class App {
   private static Directory directory;
 
   public static enum FIELD_COMBINATION {
-    JUST_CONTENT, ALL_FIELDS, TITLE_AND_CONTENT
+    JUST_CONTENT, ALL_FIELDS, TITLE_AND_CONTENT, MULTI_FIELD
   }
 
   public static void init(int indexAnalyzer, int indexSimilarity) throws IOException {
@@ -124,8 +127,19 @@ public class App {
             sb.append(parseDoc.getTitle());
             sb.append(" ");
             sb.append(parseDoc.getContent());
+            break;
+          default:
+            break;
         }
-        doc.add(new TextField(ParseDoc.DocField.CONTENT.getLabel(), sb.toString(), Field.Store.YES));
+        
+        if (fc == FIELD_COMBINATION.MULTI_FIELD) {
+          doc.add(new TextField(ParseDoc.DocField.TITLE.getLabel(), parseDoc.getTitle(), Field.Store.YES));
+          doc.add(new TextField(ParseDoc.DocField.CONTENT.getLabel(), parseDoc.getContent(), Field.Store.YES));
+        }
+        else {
+          doc.add(new TextField(ParseDoc.DocField.CONTENT.getLabel(), sb.toString(), Field.Store.YES));
+        }
+        
         /*
          * doc.add(new TextField(ParseDoc.DocField.TITLE.getLabel(),
          * parseDoc.getTitle(), Field.Store.YES)); doc.add(new
@@ -146,7 +160,7 @@ public class App {
 
   // Pending question: can you split the search vs title and content, and combine
   // them in some way?
-  public static void evaluateTopics() {
+  public static void evaluateTopics(FIELD_COMBINATION fc) {
     try {
       List<ParseTopic> topics = AppUtils.parseTopics(TOPICS_PATH);
       // System.out.println("Number topics: " + parseTopics.size());
@@ -166,36 +180,59 @@ public class App {
 
       for (ParseTopic topic : topics) {
         // generate queries
-        List<ParseQuery> queries = generateQueries(topic);
+        if (fc != FIELD_COMBINATION.MULTI_FIELD) {
+          List<ParseQuery> queries = generateQueries(topic);
+          QueryParser parser = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
+          for (ParseQuery qry : queries) {
+            // parse the query with the parser
+            // System.out.println("Query Id: " + qry.getQueryId());
+            // System.out.println("Query Id: " + qry.getWords());
+            Query query = parser.parse(QueryParser.escape(qry.getWords().trim().replace("?", "\\?")));
+            System.out.println(query.getClass());
+            // Get the set of results
+            ScoreDoc[] hits = isearcher.search(query, MAX_RESULTS).scoreDocs;
 
-        QueryParser parser = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
+            List<QueryResult> results = new ArrayList<QueryResult>();
 
-        for (ParseQuery qry : queries) {
-          // parse the query with the parser
-          // System.out.println("Query Id: " + qry.getQueryId());
-          // System.out.println("Query Id: " + qry.getWords());
-          Query query = parser.parse(QueryParser.escape(qry.getWords().trim().replace("?", "\\?")));
-
-          // Get the set of results
-          ScoreDoc[] hits = isearcher.search(query, MAX_RESULTS).scoreDocs;
-
-          List<QueryResult> results = new ArrayList<QueryResult>();
-
-          // System.out.println("Documents: " + hits.length);
-          for (int i = 0; i < hits.length; i++) {
-            Document hitDoc = isearcher.doc(hits[i].doc);
-            String docId = hitDoc.get(ParseDoc.DocField.ID.getLabel());
-            String score = Float.toString(hits[i].score);
-            QueryResult result = new QueryResult(docId, score);
-            // System.out.println(i + ") " + hitDoc.get(ParseDoc.DocField.ID.getLabel()) + "
-            // " + hits[i].score);
-            results.add(result);
+            // System.out.println("Documents: " + hits.length);
+            for (int i = 0; i < hits.length; i++) {
+              Document hitDoc = isearcher.doc(hits[i].doc);
+              String docId = hitDoc.get(ParseDoc.DocField.ID.getLabel());
+              String score = Float.toString(hits[i].score);
+              QueryResult result = new QueryResult(docId, score);
+              // System.out.println(i + ") " + hitDoc.get(ParseDoc.DocField.ID.getLabel()) + "
+              // " + hits[i].score);
+              results.add(result);
+            }
+            qry.setResults(results);
           }
-          qry.setResults(results);
+          //TODO: Need additional code to merge queries and results in case a topic
+          // generates multiple queries
+          topic.setResults(queries.get(0).getResults());
         }
-        // TODO: Need additional code to merge queries and results in case a topic
-        // generates multiple queries
-        topic.setResults(queries.get(0).getResults());
+        else {
+          List<Query> queries = generateQueries2(topic);
+          for (Query query : queries) {
+            ScoreDoc[] hits = isearcher.search(query, MAX_RESULTS).scoreDocs;
+            List<QueryResult> results = new ArrayList<QueryResult>();
+
+            for (int i = 0; i < hits.length; i++) {
+              Document hitDoc = isearcher.doc(hits[i].doc);
+              String docId = hitDoc.get(ParseDoc.DocField.ID.getLabel());
+              String score = Float.toString(hits[i].score);
+              QueryResult result = new QueryResult(docId, score);
+              // System.out.println(i + ") " + hitDoc.get(ParseDoc.DocField.ID.getLabel()) + "
+              // " + hits[i].score);
+              results.add(result);
+            }
+            //need to change this, Lucene query cannot hold results, and topic should combine results eventually
+            //query.setResults(results);
+            topic.setResults(results);
+          }
+          //TODO: Need additional code to merge queries and results in case a topic
+          // generates multiple queries
+          //topic.setResults(queries.get(0).getResults());
+        }
       }
       AppUtils.writeResults(SEARCH_RESULTS_PATH, topics);
       // AppUtils.writeResults(RESULTS_PATH + "_f" + indexFieldCombination + "a"+
@@ -212,13 +249,64 @@ public class App {
   public static List<ParseQuery> generateQueries(ParseTopic parseTopic) {
     List<ParseQuery> queries = new ArrayList<ParseQuery>();
     //try below without escaping manually
+    
     StringBuilder sb = new StringBuilder(parseTopic.getTitle().replace("\"", ""));
     sb.append(" ");
     sb.append(parseTopic.getDescription().replace("\"", ""));
     sb.append(" ");
-    sb.append(parseTopic.getNarrative().replace("\"", ""));
+    String[] splitNarrative = AppUtils.splitNarrative(parseTopic.getNarrative());
+    String narrativeToInclude = splitNarrative[0];
+    String narrativeToNOTInclude = splitNarrative[1];
+    sb.append(narrativeToInclude.replace("\"", ""));
     queries.add(new ParseQuery("1", sb));
-    //Many ways of generating the query like taking only the description, description and title, description and narrative, understanding narrative, etc.
+    return queries;
+  }
+    
+  // TODO: Need a way to generate more elaborated queries
+  public static List<Query> generateQueries2(ParseTopic parseTopic) {
+    List<Query> queries = new ArrayList<Query>();
+    try {
+      QueryParser parserForTitle = new QueryParser(ParseDoc.DocField.TITLE.getLabel(), analyzer);
+      QueryParser parserForContent = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
+      
+      Query queryTitleOnTitle = parserForTitle.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      Query queryTitleOnContent = parserForContent.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      Query queryDescriptionOnContent = parserForContent.parse(QueryParser.escape(parseTopic.getDescription().replace("\"", "").trim().replace("?", "\\?")));
+      
+      BooleanQuery.Builder bqb = new BooleanQuery.Builder();
+      bqb.add(queryTitleOnTitle, Occur.SHOULD);
+      bqb.add(queryTitleOnContent, Occur.SHOULD);
+      bqb.add(queryDescriptionOnContent, Occur.SHOULD);
+      
+      String[] splitNarrative = AppUtils.splitNarrative(parseTopic.getNarrative());
+      String narrativeToInclude = splitNarrative[0];
+      String narrativeToNOTInclude = splitNarrative[1];
+      if (narrativeToInclude.trim().length() != 0) {
+        Query queryNarrativeOnContent = parserForContent.parse(QueryParser.escape(narrativeToInclude.replace("\"", "").trim().replace("?", "\\?")));
+        bqb.add(queryNarrativeOnContent, Occur.SHOULD);
+      }
+//      if (narrativeToNOTInclude.trim().length() != 0) {
+//        Query queryNonNarrativeOnContent = parserForContent.parse(QueryParser.escape(narrativeToNOTInclude.replace("\"", "").trim().replace("?", "\\?")));
+//        bqb.add(queryNonNarrativeOnContent, Occur.MUST_NOT);
+//      }
+      
+      Query query = bqb.build();
+      
+      //Query query = parser.parse(QueryParser.escape(parseTopic.getDescription().replace("\"", "").trim().replace("?", "\\?")));
+      //if (query instanceof BooleanQuery) {
+        //BooleanQuery qry = (BooleanQuery) query;
+      //}
+      
+      //String reducedNarrative = AppUtils.extractNarrative(parseTopic.getNarrative());
+      //sb.append(reducedNarrative.replace("\"", ""));
+      //sb.append(parseTopic.getNarrative().replace("\"", ""));
+      
+    
+      //Many ways of generating the query like taking only the description, description and title, description and narrative, understanding narrative, etc.
+      queries.add(query);
+    } catch (ParseException pe) {
+      pe.printStackTrace();
+    }
     return queries;
   }
 
@@ -309,12 +397,12 @@ public class App {
     if (indexFieldCombination == -1 || indexAnalyzer == -1 || indexSimilarity == -1) {
       throw new IllegalArgumentException("Not enough arguments");
     }
-//    indexFieldCombination = 0;
-//    indexAnalyzer = 0;
+//    indexFieldCombination = 3;
+//    indexAnalyzer = 1;
 //    indexSimilarity = 0;
     init(indexAnalyzer, indexSimilarity);
     buildIndex(FIELD_COMBINATION.values()[indexFieldCombination]);
-    evaluateTopics();
+    evaluateTopics(FIELD_COMBINATION.values()[indexFieldCombination]);
     shutdown();
     System.out.println("Processing done");
   }
