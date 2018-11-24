@@ -1,6 +1,7 @@
 package ie.tcd.scss.cs7is3.xtrilyzers;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,9 +9,12 @@ import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.CharArraySet;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.Tokenizer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.analysis.standard.ClassicAnalyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
@@ -18,20 +22,26 @@ import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
+import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanClause.Occur;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.similarities.BM25Similarity;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.apache.lucene.search.similarities.MultiSimilarity;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.BytesRef;
+import org.apache.lucene.util.BytesRefHash.MaxBytesLengthExceededException;
 
 public class App {
   // Directory where the search index will be saved
@@ -269,8 +279,26 @@ public class App {
       QueryParser parserForTitle = new QueryParser(ParseDoc.DocField.TITLE.getLabel(), analyzer);
       QueryParser parserForContent = new QueryParser(ParseDoc.DocField.CONTENT.getLabel(), analyzer);
       
-      Query queryTitleOnTitle = parserForTitle.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      //Query queryTitleOnTitle = parserForTitle.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      
+      List<String> terms = getTerms(analyzer, parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?"));
+      
+      BooleanQuery.Builder bqbTemp = new BooleanQuery.Builder();
+      for (String term : terms) {
+        Query qt = new TermQuery(new Term(ParseDoc.DocField.TITLE.getLabel(), term));
+        bqbTemp.add(new BooleanClause(qt, Occur.SHOULD));
+        
+        //Query qt2 = new TermQuery(new Term(ParseDoc.DocField.CONTENT.getLabel(), term));
+        //bqbTemp.add(new BooleanClause(qt2, Occur.SHOULD));
+      }
+      bqbTemp.setMinimumNumberShouldMatch(Math.floorDiv(terms.size(), 2) + 1);
+      Query queryTitleOnTitle  = bqbTemp.build();
+      //((BooleanQuery) queryTitleOnContent).setMinimumNumberShouldMatch(1);
+      //Query queryTitleOnContent = parserForContent.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      
       Query queryTitleOnContent = parserForContent.parse(QueryParser.escape(parseTopic.getTitle().replace("\"", "").trim().replace("?", "\\?")));
+      queryTitleOnContent = new BoostQuery(queryTitleOnContent, 4);
+      
       Query queryDescriptionOnContent = parserForContent.parse(QueryParser.escape(parseTopic.getDescription().replace("\"", "").trim().replace("?", "\\?")));
       
       BooleanQuery.Builder bqb = new BooleanQuery.Builder();
@@ -308,6 +336,24 @@ public class App {
       pe.printStackTrace();
     }
     return queries;
+  }
+  
+  public static List<String> getTerms(Analyzer analyzer, String str) {
+    List<String> terms =  new ArrayList<String>();
+    try {
+      TokenStream stream = analyzer.tokenStream("field", new StringReader(str));
+      stream.reset();
+      CharTermAttribute termAtt = stream.addAttribute(CharTermAttribute.class);
+      while (stream.incrementToken()) {
+        terms.add(termAtt.toString());
+      }
+      stream.end();
+      stream.close();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return terms;
   }
 
   /*
@@ -397,6 +443,7 @@ public class App {
     if (indexFieldCombination == -1 || indexAnalyzer == -1 || indexSimilarity == -1) {
       throw new IllegalArgumentException("Not enough arguments");
     }
+    
 //    indexFieldCombination = 3;
 //    indexAnalyzer = 1;
 //    indexSimilarity = 0;
