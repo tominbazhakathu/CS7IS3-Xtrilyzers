@@ -418,7 +418,7 @@ class AppUtils {
       List<QueryResult> results = topic.getResults();
       for (QueryResult result : results) {
         StringBuilder sb = new StringBuilder();
-        sb.append(topic.getNum());
+        sb.append(topic.getNum().trim());
         sb.append(" ");
         sb.append("0");
         sb.append(" ");
