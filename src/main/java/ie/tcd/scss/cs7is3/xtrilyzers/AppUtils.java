@@ -372,6 +372,7 @@ class AppUtils {
     description = description.replace("Description:", " ");
     String narrative = sb.substring(startNarrative + ParseTopic.TopicField.NARRATIVE.getStartTag().length());
     narrative = narrative.replace("Narrative:", " ");
+    //System.out.println(narrative);
     
     ParseTopic pt = new ParseTopic(
         num,
@@ -381,11 +382,31 @@ class AppUtils {
     return pt;
   }
   
+  public static String filter(String str) {
+    return str.replaceAll("documents", " ")
+      .replaceAll("document", " ")
+      .replaceAll("relevant", " ")
+      .replaceAll("include", " ")
+      .replaceAll("discussions", " ")
+      .replaceAll("discussion", " ")
+      .replaceAll("discuss", " ")
+      .replaceAll("results", " ")
+      .replaceAll("result", " ")
+      .replaceAll("describing", " ")
+      .replaceAll("described", " ")
+      .replaceAll("describe", " ")
+      .replaceAll("provides", " ")
+      .replaceAll("provide", " ")
+      //.replaceAll("mention", " ")
+      .replaceAll("find", " ")
+      .replaceAll("information", " ");
+  }
+  
   public static String[] splitNarrative(String narrative) {
     // Replacing the slash character by a space. Slash appears to divide certain words 
     // Sentences, and pieces of sentences on the topic narrative seems to be separated by either comma, semicolon, and dot
     //System.out.println("narrative before-> " + narrative);
-    String[] sentences = narrative.replace("/", " ").split("[\\.|,|;]");
+    String[] sentences = narrative.toLowerCase().replace("/", " ").split("[\\.|,|;]");
     Pattern p = Pattern.compile(".*not relevant.*");
     
     List<String> sentencesToInclude =
@@ -396,6 +417,7 @@ class AppUtils {
     
     StringBuilder sb1 = new StringBuilder();
     for(String sentence : sentencesToInclude) {
+        sentence = filter(sentence);
         sb1.append(sentence);
     }
     

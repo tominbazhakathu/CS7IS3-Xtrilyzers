@@ -17,7 +17,8 @@ do
       
       #flag -l3 seems to no longer be supported because of it is a boolean comparison
       #trec_eval.9.0/trec_eval -l3 qrels/qrel_part1.txt results/results.txt > "evaluation/trec_eval_f"$f"a"$a"s"$s""
-      trec_eval.9.0/trec_eval qrels/qrel_part1.txt results/results.txt > "evaluation/trec_eval_f"$f"a"$a"s"$s""
+      #trec_eval.9.0/trec_eval qrels/qrel_part1.txt results/results.txt > "evaluation/trec_eval_f"$f"a"$a"s"$s""
+      trec_eval.9.0/trec_eval qrels/qrels_comp.txt results/results.txt > "evaluation/trec_eval_f"$f"a"$a"s"$s""
     done
   done
 done
